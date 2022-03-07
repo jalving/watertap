@@ -403,7 +403,10 @@ class SeawaterParameterData(PhysicalParameterBlock):
              'cp_phase': {'method': '_cp_phase'},
              'therm_cond_phase': {'method': '_therm_cond_phase'},
              'dh_vap': {'method': '_dh_vap'},
-             'diffus_phase': {'method': '_diffus_phase'}
+             'diffus_phase': {'method': '_diffus_phase'},
+             #added by Jordan 3/1/2022
+             'fug_phase_comp':{'method': '_fugacity_phase_comp'}
+             #'flow_mass_comp':{'method': '_flow_mass_comp'}
              })
         # TODO: add diffusivity variable and constraint since it is needed when calculating mass transfer coefficient in
         #  current implementation of 0D RO model
@@ -642,6 +645,21 @@ class SeawaterStateBlockData(StateBlockData):
 
     # -----------------------------------------------------------------------------
     # Property Methods
+    # added by Jordan 3/1/2022
+    # fugacity of the liquid phase 
+    def _fugacity_phase_comp(self):
+        self.fug_phase_comp = Var(
+        self.params.phase_list,     #this is ['Liq']
+        self.params.component_list, #this is ['H2O','TDS']
+        initialize=10,
+        bounds=(1e-6, 1e9),
+        units=pyunits.Pa,
+        doc="Fugacity")
+
+        #the fugacity of the liquid phase is equal to the total pressure
+        self.eq_fug_phase_comp = Constraint(expr = self.fug_phase_comp["Liq","H2O"] == self.pressure)
+    ############################################################
+
     def _mass_frac_phase_comp(self):
         self.mass_frac_phase_comp = Var(
             self.params.phase_list,
